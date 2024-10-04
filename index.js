@@ -8,6 +8,8 @@ let waveLength = 0.02; // 波の長さ
 let waveSpeed = 0.05; // 波の速度
 let phase = 0;
 
+const WAVE_COLOR = "rgba(160,192,207,1)";
+
 function drawWave() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -23,9 +25,12 @@ function drawWave() {
   ctx.lineTo(0, canvas.height);
   ctx.closePath();
 
-  ctx.fillStyle = "rgba(0, 255, 255, 0.5)"; // 波の色
+  ctx.fillStyle = WAVE_COLOR; // 波の色
   ctx.fill();
 
+  ctx.strokeStyle = "white"; // 淵の色
+  ctx.lineWidth = 1; // 淵の太さ
+  ctx.stroke();
   phase += waveSpeed;
   requestAnimationFrame(drawWave);
 }
