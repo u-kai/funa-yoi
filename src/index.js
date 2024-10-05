@@ -44,33 +44,44 @@ canvas.height = window.innerHeight;
 
 const ctx = canvas.getContext("2d");
 
-const state = new WaveState();
+const blueWave = new WaveState();
+const transparentWave = new WaveState(
+  50,
+  0.002,
+  0.05,
+  0,
+  new WaveMotion(),
+  "rgba(160,192,207,0.5)"
+);
+
+canvas.addEventListener("click", () => {
+  blueWave.toggleMotion();
+  transparentWave.toggleMotion();
+});
 
 draw();
 
 function draw() {
   drawCanvas(canvas, ctx);
-  drawWave(ctx, canvas, state);
+  drawWave(ctx, canvas, blueWave, Math.sin);
+  drawWave(ctx, canvas, transparentWave, Math.cos);
 
-  state.update();
+  blueWave.update();
+  transparentWave.update();
   requestAnimationFrame(draw);
 }
-
-canvas.addEventListener("click", () => {
-  state.toggleMotion();
-});
 
 function drawCanvas(canvas, ctx) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function drawWave(ctx, canvas, state) {
+function drawWave(ctx, canvas, state, mathFunc) {
   ctx.beginPath();
 
   ctx.moveTo(0, canvas.height / 2);
 
   for (let x = 0; x < canvas.width; x++) {
-    const y = calcPixelHeightIndex(state, x, canvas.height / 2);
+    const y = calcPixelHeightIndex(state, x, canvas.height / 2, mathFunc);
     ctx.lineTo(x, y);
   }
 
@@ -89,6 +100,6 @@ function drawWave(ctx, canvas, state) {
   ctx.stroke();
 }
 
-function calcPixelHeightIndex(state, x, baseHeight) {
-  return state.height * Math.sin(x * state.length + state.phase) + baseHeight;
+function calcPixelHeightIndex(state, x, baseHeight, mathFunc) {
+  return state.height * mathFunc(x * state.length + state.phase) + baseHeight;
 }
