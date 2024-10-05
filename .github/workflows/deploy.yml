@@ -5,6 +5,9 @@ on:
     branches:
       - main # mainブランチへのpushで実行
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
