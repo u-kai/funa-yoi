@@ -54,10 +54,70 @@ const transparentWave = new WaveState(
   "rgba(160,192,207,0.5)"
 );
 
+class Iceberg {
+  constructor(points) {
+    this.points = points;
+  }
+  move(x, y) {
+    this.points.forEach((point) => {
+      point.move(x, y);
+    });
+  }
+}
+
+class RandomPoint {
+  constructor(xRange, yRange) {
+    this.x = RandomPoint.randomRange(xRange);
+    this.y = RandomPoint.randomRange(yRange);
+  }
+  move(x, y) {
+    this.x += x;
+    this.y += y;
+  }
+  static randomRange(range) {
+    return Math.random() * (range.max - range.min) + range.min;
+  }
+}
+
+class Range {
+  constructor(min, max) {
+    this.min = min;
+    this.max = max;
+  }
+  static defaultPlus(base, addedPercent) {
+    return new Range(base, base + base / addedPercent);
+  }
+  static defaultMinus(base, minusPercent) {
+    return new Range(base - base / minusPercent, base);
+  }
+}
+
 canvas.addEventListener("click", () => {
   blueWave.toggleMotion();
   transparentWave.toggleMotion();
 });
+
+console.log(canvas.width);
+console.log(canvas.height);
+const iceberg = new Iceberg([
+  new RandomPoint(
+    Range.defaultPlus(canvas.width * 0.5, 10),
+    Range.defaultPlus(canvas.height * 0.2, 10)
+  ),
+  new RandomPoint(
+    Range.defaultPlus(canvas.width * 0.25, 10),
+    Range.defaultPlus(canvas.height * 0.5, 10)
+  ),
+  new RandomPoint(
+    Range.defaultPlus(canvas.width * 0.5, 10),
+    Range.defaultMinus(canvas.height, 10)
+  ),
+  new RandomPoint(
+    Range.defaultPlus((canvas.width * 3) / 4, 10),
+    Range.defaultPlus(canvas.height / 2, 10)
+  ),
+]);
+console.log(iceberg);
 
 draw();
 
@@ -65,14 +125,31 @@ function draw() {
   drawCanvas(canvas, ctx);
   drawWave(ctx, canvas, blueWave, Math.sin);
   drawWave(ctx, canvas, transparentWave, Math.cos);
+  drawIceberg(ctx, iceberg);
 
   blueWave.update();
   transparentWave.update();
+  iceberg.move(0, Math.sin(blueWave.phase) * 0.5);
   requestAnimationFrame(draw);
 }
 
 function drawCanvas(canvas, ctx) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawIceberg(ctx, iceberg) {
+  ctx.beginPath();
+  for (let i = 0; i < iceberg.points.length; i++) {
+    const point = iceberg.points[i];
+    if (i === 0) {
+      ctx.moveTo(point.x, point.y);
+    } else {
+      ctx.lineTo(point.x, point.y);
+    }
+  }
+  ctx.closePath();
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.fill();
 }
 
 function drawWave(ctx, canvas, state, mathFunc) {
