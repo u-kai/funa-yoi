@@ -14,7 +14,7 @@ class WaveState {
     speed = 0.05,
     phase = 0,
     motion = new WaveMotion(),
-    color = "rgba(160,192,207,1)"
+    color = "rgba(160,192,207,0.7)"
   ) {
     this.height = height;
     this.maxHeight = height;
@@ -97,8 +97,6 @@ canvas.addEventListener("click", () => {
   transparentWave.toggleMotion();
 });
 
-console.log(canvas.width);
-console.log(canvas.height);
 const iceberg = new Iceberg([
   new RandomPoint(
     Range.defaultPlus(canvas.width * 0.5, 10),
@@ -117,15 +115,14 @@ const iceberg = new Iceberg([
     Range.defaultPlus(canvas.height / 2, 10)
   ),
 ]);
-console.log(iceberg);
 
 draw();
 
 function draw() {
   drawCanvas(canvas, ctx);
+  drawIceberg(ctx, iceberg);
   drawWave(ctx, canvas, blueWave, Math.sin);
   drawWave(ctx, canvas, transparentWave, Math.cos);
-  drawIceberg(ctx, iceberg);
 
   blueWave.update();
   transparentWave.update();
@@ -148,7 +145,7 @@ function drawIceberg(ctx, iceberg) {
     }
   }
   ctx.closePath();
-  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.fillStyle = "rgba(255,255,255,1)";
   ctx.fill();
 }
 
