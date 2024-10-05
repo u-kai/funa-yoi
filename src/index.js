@@ -63,6 +63,18 @@ class Iceberg {
       point.move(x, y);
     });
   }
+  copyByRandomPlus(x, y) {
+    const copiedPoints = [];
+    this.points.forEach((point) => {
+      copiedPoints.push(
+        new RandomPoint(
+          Range.defaultPlus(point.x, x),
+          Range.defaultPlus(point.y, y)
+        )
+      );
+    });
+    return new Iceberg(copiedPoints);
+  }
 }
 
 class RandomPoint {
@@ -99,19 +111,31 @@ canvas.addEventListener("click", () => {
 
 const iceberg = new Iceberg([
   new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.5, 10),
+    Range.defaultPlus(canvas.width * 0.6, 10),
     Range.defaultPlus(canvas.height * 0.2, 10)
   ),
   new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.25, 10),
+    Range.defaultPlus(canvas.width * 0.4, 10),
+    Range.defaultPlus(canvas.height * 0.35, 10)
+  ),
+  new RandomPoint(
+    Range.defaultPlus(canvas.width * 0.35, 10),
     Range.defaultPlus(canvas.height * 0.5, 10)
+  ),
+  new RandomPoint(
+    Range.defaultPlus(canvas.width * 0.475, 10),
+    Range.defaultPlus(canvas.height * 0.7, 10)
   ),
   new RandomPoint(
     Range.defaultPlus(canvas.width * 0.5, 10),
     Range.defaultMinus(canvas.height, 10)
   ),
   new RandomPoint(
-    Range.defaultPlus((canvas.width * 3) / 4, 10),
+    Range.defaultPlus(canvas.width * 0.65, 10),
+    Range.defaultMinus(canvas.height * 0.75, 10)
+  ),
+  new RandomPoint(
+    Range.defaultPlus(canvas.width * 0.75, 10),
     Range.defaultPlus(canvas.height / 2, 10)
   ),
 ]);
