@@ -1,9 +1,3 @@
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
 class WaveMotion {
   constructor() {
     this.isStop = false;
@@ -35,9 +29,6 @@ class WaveState {
       this.height *= 0.99;
     }
     if (!this.motion.isStop && this.height < this.maxHeight) {
-      //if (this.height === 0) {
-      //  this.height = 10;
-      //}
       this.height *= 1.01;
     }
     this.phase += this.speed;
@@ -47,20 +38,43 @@ class WaveState {
   }
 }
 
+const canvas = document.getElementById("canvas");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const ctx = canvas.getContext("2d");
+
 const state = new WaveState();
 
-function drawWave() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+draw();
 
-  // 波を描画
+function draw() {
+  drawCanvas(canvas, ctx);
+  drawWave(ctx, canvas, state);
+
+  state.update();
+  requestAnimationFrame(draw);
+}
+
+canvas.addEventListener("click", () => {
+  state.toggleMotion();
+});
+
+function drawCanvas(canvas, ctx) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawWave(ctx, canvas, state) {
   ctx.beginPath();
+
   ctx.moveTo(0, canvas.height / 2);
 
   for (let x = 0; x < canvas.width; x++) {
-    const y = calcPixelIndex(state, x, canvas.height / 2);
+    const y = calcPixelHeightIndex(state, x, canvas.height / 2);
     ctx.lineTo(x, y);
   }
 
+  // 画面下端への直線
   ctx.lineTo(canvas.width, canvas.height);
   ctx.lineTo(0, canvas.height);
   ctx.closePath();
@@ -73,19 +87,8 @@ function drawWave() {
   ctx.strokeStyle = "white"; // 淵の色
   ctx.lineWidth = 2; // 淵の太さ
   ctx.stroke();
-
-  state.update();
-  requestAnimationFrame(drawWave);
 }
 
-// クリックイベントを設定
-canvas.addEventListener("click", () => {
-  console.log("click");
-  state.toggleMotion();
-});
-
-drawWave();
-
-function calcPixelIndex(state, x, baseHeight) {
+function calcPixelHeightIndex(state, x, baseHeight) {
   return state.height * Math.sin(x * state.length + state.phase) + baseHeight;
 }
