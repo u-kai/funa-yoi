@@ -1,3 +1,20 @@
+const canvas = document.getElementById("canvas");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+class MovingPosition {
+  constructor(x, y, moveFunc) {
+    this.x = x;
+    this.y = y;
+    this.initialX = x;
+    this.initialY = y;
+    this.moveFunc = moveFunc;
+  }
+  update() {
+    this.moveFunc(this);
+  }
+}
+
 class WaveMotion {
   constructor() {
     this.isStop = false;
@@ -38,166 +55,181 @@ class WaveState {
   }
 }
 
-const canvas = document.getElementById("canvas");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const ctx = canvas.getContext("2d");
-
-const blueWave = new WaveState();
-const transparentWave = new WaveState(
-  50,
-  0.002,
-  0.05,
-  0,
-  new WaveMotion(),
-  "rgba(160,192,207,0.5)"
-);
-
-class Iceberg {
-  constructor(points) {
-    this.points = points;
+class WaveDrawer {
+  constructor(state, mathFunc, drewWidth, drewHeight) {
+    this.state = state;
+    this.mathFunc = mathFunc;
+    this.drewWidth = drewWidth;
+    this.drewHeight = drewHeight;
   }
-  move(x, y) {
-    this.points.forEach((point) => {
-      point.move(x, y);
-    });
-  }
-  copyByRandomPlus(x, y) {
-    const copiedPoints = [];
-    this.points.forEach((point) => {
-      copiedPoints.push(
-        new RandomPoint(
-          Range.defaultPlus(point.x, x),
-          Range.defaultPlus(point.y, y)
-        )
+  draw(ctx, canvas) {
+    ctx.beginPath();
+
+    ctx.moveTo(0, this.drewHeight);
+
+    for (let x = 0; x < canvas.width; x++) {
+      const position = new MovingPosition(
+        x,
+        this.drewHeight,
+        moveByWave(this.state, this.mathFunc)
       );
-    });
-    return new Iceberg(copiedPoints);
+      position.update();
+      ctx.lineTo(position.x, position.y);
+    }
+
+    // 画面下端への直線
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.closePath();
+
+    // 波の塗りつぶし
+    ctx.fillStyle = this.state.color;
+    ctx.fill();
+
+    // 波の淵（境界線）を白色で描画
+    ctx.strokeStyle = "white"; // 淵の色
+    ctx.lineWidth = 2; // 淵の太さ
+    ctx.stroke();
+  }
+  update() {
+    this.state.update();
+  }
+  toggleMotion() {
+    this.state.toggleMotion();
   }
 }
 
-class RandomPoint {
-  constructor(xRange, yRange) {
-    this.x = RandomPoint.randomRange(xRange);
-    this.y = RandomPoint.randomRange(yRange);
-  }
-  move(x, y) {
-    this.x += x;
-    this.y += y;
-  }
-  static randomRange(range) {
-    return Math.random() * (range.max - range.min) + range.min;
-  }
+function moveByWaveWithStaticX(waveState, mathFunc, x) {
+  return (position) => {
+    position.y =
+      position.initialY +
+      waveState.height * mathFunc(x * waveState.length + waveState.phase);
+  };
+}
+function moveByWave(waveState, mathFunc) {
+  return (p) => moveByWaveWithStaticX(waveState, mathFunc, p.x)(p);
 }
 
-class Range {
-  constructor(min, max) {
-    this.min = min;
-    this.max = max;
-  }
-  static defaultPlus(base, addedPercent) {
-    return new Range(base, base + base / addedPercent);
-  }
-  static defaultMinus(base, minusPercent) {
-    return new Range(base - base / minusPercent, base);
-  }
-}
+const blueWave = new WaveDrawer(
+  new WaveState(30, 0.002, 0.05),
+  Math.sin,
+  canvas.width,
+  canvas.height / 2
+);
 
 canvas.addEventListener("click", () => {
   blueWave.toggleMotion();
-  transparentWave.toggleMotion();
 });
 
-const iceberg = new Iceberg([
-  new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.6, 10),
-    Range.defaultPlus(canvas.height * 0.2, 10)
-  ),
-  new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.4, 10),
-    Range.defaultPlus(canvas.height * 0.35, 10)
-  ),
-  new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.35, 10),
-    Range.defaultPlus(canvas.height * 0.5, 10)
-  ),
-  new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.475, 10),
-    Range.defaultPlus(canvas.height * 0.7, 10)
-  ),
-  new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.5, 10),
-    Range.defaultMinus(canvas.height, 10)
-  ),
-  new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.65, 10),
-    Range.defaultMinus(canvas.height * 0.75, 10)
-  ),
-  new RandomPoint(
-    Range.defaultPlus(canvas.width * 0.75, 10),
-    Range.defaultPlus(canvas.height / 2, 10)
-  ),
-]);
+const ctx = canvas.getContext("2d");
 
-draw();
+class ImageDrawer {
+  constructor(
+    url,
+    window,
+    distanceFromCenterX,
+    distanceFromCenterY,
+    scale = 1,
+    moveFunc
+  ) {
+    this.image = new Image();
+    this.image.src = url;
 
-function draw() {
-  drawCanvas(canvas, ctx);
-  drawIceberg(ctx, iceberg);
-  drawWave(ctx, canvas, blueWave, Math.sin);
-  drawWave(ctx, canvas, transparentWave, Math.cos);
-
-  blueWave.update();
-  transparentWave.update();
-  iceberg.move(0, Math.sin(blueWave.phase) * 0.5);
-  requestAnimationFrame(draw);
+    this.image.onload = () => {
+      const centerX = window.innerWidth / 2 - (this.image.width * scale) / 2;
+      const centerY = window.innerHeight / 2 - (this.image.height * scale) / 2;
+      this.position = new MovingPosition(
+        centerX + distanceFromCenterX,
+        centerY + distanceFromCenterY,
+        moveFunc
+      );
+      this.image.width = this.image.width * scale;
+      this.image.height = this.image.height * scale;
+    };
+  }
+  draw(ctx) {
+    if (this.hasLoaded()) {
+      ctx.drawImage(
+        this.image,
+        this.position.x,
+        this.position.y,
+        this.image.width,
+        this.image.height
+      );
+    }
+  }
+  update() {
+    this.position?.update();
+  }
+  hasLoaded() {
+    return this.image.complete && this.position;
+  }
 }
+
+const centerIceberg = new ImageDrawer(
+  "static/center-iceberg.png",
+  window,
+  0,
+  0,
+  1.5,
+  moveByWaveWithStaticX(blueWave.state, Math.sin, 0)
+);
+const rightIceberg = new ImageDrawer(
+  "static/right-iceberg.png",
+  window,
+  300,
+  0,
+  1.5,
+  moveByWave(blueWave.state, Math.sin)
+);
+const leftIceberg = new ImageDrawer(
+  "static/left-iceberg.png",
+  window,
+  -150,
+  0,
+  1.5,
+  moveByWave(blueWave.state, Math.sin)
+);
+
+const bear1 = new ImageDrawer(
+  "static/bear1.svg",
+  window,
+  50,
+  -250,
+  0.3,
+  moveByWaveWithStaticX(blueWave.state, Math.sin, 0)
+);
+const bear2 = new ImageDrawer(
+  "static/bear2.svg",
+  window,
+  -70,
+  -200,
+  0.3,
+  moveByWaveWithStaticX(blueWave.state, Math.sin, 0)
+);
 
 function drawCanvas(canvas, ctx) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function drawIceberg(ctx, iceberg) {
-  ctx.beginPath();
-  for (let i = 0; i < iceberg.points.length; i++) {
-    const point = iceberg.points[i];
-    if (i === 0) {
-      ctx.moveTo(point.x, point.y);
-    } else {
-      ctx.lineTo(point.x, point.y);
-    }
-  }
-  ctx.closePath();
-  ctx.fillStyle = "rgba(255,255,255,1)";
-  ctx.fill();
+function draw() {
+  drawCanvas(canvas, ctx);
+
+  blueWave.draw(ctx, canvas);
+  rightIceberg.draw(ctx);
+  leftIceberg.draw(ctx);
+  centerIceberg.draw(ctx);
+  bear1.draw(ctx);
+  bear2.draw(ctx);
+
+  blueWave.update();
+  bear1.update();
+  bear2.update();
+  centerIceberg.update();
+  rightIceberg.update();
+  leftIceberg.update();
+
+  requestAnimationFrame(draw);
 }
 
-function drawWave(ctx, canvas, state, mathFunc) {
-  ctx.beginPath();
-
-  ctx.moveTo(0, canvas.height / 2);
-
-  for (let x = 0; x < canvas.width; x++) {
-    const y = calcPixelHeightIndex(state, x, canvas.height / 2, mathFunc);
-    ctx.lineTo(x, y);
-  }
-
-  // 画面下端への直線
-  ctx.lineTo(canvas.width, canvas.height);
-  ctx.lineTo(0, canvas.height);
-  ctx.closePath();
-
-  // 波の塗りつぶし
-  ctx.fillStyle = state.color;
-  ctx.fill();
-
-  // 波の淵（境界線）を白色で描画
-  ctx.strokeStyle = "white"; // 淵の色
-  ctx.lineWidth = 2; // 淵の太さ
-  ctx.stroke();
-}
-
-function calcPixelHeightIndex(state, x, baseHeight, mathFunc) {
-  return state.height * mathFunc(x * state.length + state.phase) + baseHeight;
-}
+draw();
