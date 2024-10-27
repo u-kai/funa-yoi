@@ -1,7 +1,3 @@
-const canvas = document.getElementById("canvas");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
 class MovingPosition {
   constructor(x, y, moveFunc) {
     this.x = x;
@@ -110,25 +106,6 @@ function moveByWave(waveState, mathFunc) {
   return (p) => moveByWaveWithStaticX(waveState, mathFunc, p.x)(p);
 }
 
-const blueWave = new WaveDrawer(
-  new WaveState(30, 0.002, 0.05),
-  Math.sin,
-  canvas.width,
-  canvas.height / 2
-);
-const transparentWave = new WaveDrawer(
-  new WaveState(30, 0.002, 0.05, 0, new WaveMotion(), "rgba(160,192,207,0.3)"),
-  Math.cos,
-  canvas.width,
-  canvas.height / 2
-);
-
-canvas.addEventListener("click", () => {
-  blueWave.toggleMotion();
-});
-
-const ctx = canvas.getContext("2d");
-
 class ImageDrawer {
   constructor(
     url,
@@ -172,6 +149,38 @@ class ImageDrawer {
   }
 }
 
+// TODO
+class Temperature {
+  constructor() {
+    this.temperature = 20;
+  }
+}
+
+const canvas = document.getElementById("canvas");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const ctx = canvas.getContext("2d");
+
+canvas.addEventListener("click", () => {
+  blueWave.toggleMotion();
+  transparentWave.toggleMotion();
+});
+
+const blueWave = new WaveDrawer(
+  new WaveState(30, 0.002, 0.05),
+  Math.sin,
+  canvas.width,
+  canvas.height / 2
+);
+const transparentWave = new WaveDrawer(
+  new WaveState(30, 0.002, 0.05, 0, new WaveMotion(), "rgba(160,192,207,0.3)"),
+  Math.cos,
+  canvas.width,
+  canvas.height / 2
+);
+
 const centerIceberg = new ImageDrawer(
   "static/center-iceberg.png",
   window,
@@ -214,32 +223,56 @@ const bear2 = new ImageDrawer(
   moveByWaveWithStaticX(blueWave.state, blueWave.mathFunc, 0)
 );
 
+const penguin1 = new ImageDrawer(
+  "static/penguin1.svg",
+  window,
+  -180,
+  350,
+  0.2,
+  (p) => {}
+);
+
+const penguin2 = new ImageDrawer(
+  "static/penguin2.svg",
+  window,
+  -150,
+  300,
+  0.2,
+  (p) => {}
+);
+
+const temperature = new Temperature();
+
 function drawCanvas(canvas, ctx) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function draw() {
   drawCanvas(canvas, ctx);
-
   blueWave.draw(ctx, canvas);
   transparentWave.draw(ctx, canvas);
+
+  ctx.fillStyle = "black";
+  ctx.font = "20px Arial";
+  ctx.fillText("Temperature: " + temperature.temperature + "°C", 100, 100);
 
   rightIceberg.draw(ctx);
   leftIceberg.draw(ctx);
   centerIceberg.draw(ctx);
-
   bear1.draw(ctx);
   bear2.draw(ctx);
+  penguin1.draw(ctx);
+  penguin2.draw(ctx);
 
   blueWave.update();
   transparentWave.update();
-
   centerIceberg.update();
   rightIceberg.update();
   leftIceberg.update();
-
   bear1.update();
   bear2.update();
+  penguin1.update();
+  penguin2.update();
 
   requestAnimationFrame(draw);
 }
