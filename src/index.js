@@ -116,6 +116,12 @@ const blueWave = new WaveDrawer(
   canvas.width,
   canvas.height / 2
 );
+const transparentWave = new WaveDrawer(
+  new WaveState(30, 0.002, 0.05, 0, new WaveMotion(), "rgba(160,192,207,0.3)"),
+  Math.cos,
+  canvas.width,
+  canvas.height / 2
+);
 
 canvas.addEventListener("click", () => {
   blueWave.toggleMotion();
@@ -172,7 +178,7 @@ const centerIceberg = new ImageDrawer(
   0,
   0,
   1.5,
-  moveByWaveWithStaticX(blueWave.state, Math.sin, 0)
+  moveByWaveWithStaticX(blueWave.state, blueWave.mathFunc, 0)
 );
 const rightIceberg = new ImageDrawer(
   "static/right-iceberg.png",
@@ -180,7 +186,7 @@ const rightIceberg = new ImageDrawer(
   300,
   0,
   1.5,
-  moveByWave(blueWave.state, Math.sin)
+  moveByWave(blueWave.state, blueWave.mathFunc)
 );
 const leftIceberg = new ImageDrawer(
   "static/left-iceberg.png",
@@ -188,7 +194,7 @@ const leftIceberg = new ImageDrawer(
   -150,
   0,
   1.5,
-  moveByWave(blueWave.state, Math.sin)
+  moveByWave(blueWave.state, blueWave.mathFunc)
 );
 
 const bear1 = new ImageDrawer(
@@ -197,7 +203,7 @@ const bear1 = new ImageDrawer(
   50,
   -250,
   0.3,
-  moveByWaveWithStaticX(blueWave.state, Math.sin, 0)
+  moveByWaveWithStaticX(blueWave.state, blueWave.mathFunc, 0)
 );
 const bear2 = new ImageDrawer(
   "static/bear2.svg",
@@ -205,7 +211,7 @@ const bear2 = new ImageDrawer(
   -70,
   -200,
   0.3,
-  moveByWaveWithStaticX(blueWave.state, Math.sin, 0)
+  moveByWaveWithStaticX(blueWave.state, blueWave.mathFunc, 0)
 );
 
 function drawCanvas(canvas, ctx) {
@@ -216,18 +222,24 @@ function draw() {
   drawCanvas(canvas, ctx);
 
   blueWave.draw(ctx, canvas);
+  transparentWave.draw(ctx, canvas);
+
   rightIceberg.draw(ctx);
   leftIceberg.draw(ctx);
   centerIceberg.draw(ctx);
+
   bear1.draw(ctx);
   bear2.draw(ctx);
 
   blueWave.update();
-  bear1.update();
-  bear2.update();
+  transparentWave.update();
+
   centerIceberg.update();
   rightIceberg.update();
   leftIceberg.update();
+
+  bear1.update();
+  bear2.update();
 
   requestAnimationFrame(draw);
 }
