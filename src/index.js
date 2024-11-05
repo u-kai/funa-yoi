@@ -149,6 +149,57 @@ class ImageDrawer {
   }
 }
 
+class CloudDrawer {
+  constructor(url, window) {
+    this.image = new Image();
+    this.image.src = url;
+
+    const scale = Math.random() * 0.5 + 0.5;
+    this.scale = scale;
+
+    this.position = new MovingPosition(
+      Math.random() * window.innerWidth,
+      Math.random() * (window.innerHeight / 6),
+      (pos) => this.moveCloud(pos)
+    );
+
+    this.image.onload = () => {
+      this.image.width = this.image.width * this.scale;
+      this.image.height = this.image.height * this.scale;
+    };
+  }
+
+  moveCloud(position) {
+    position.x -= 0.3;
+
+    if (position.x < -this.image.width) {
+      position.x = window.innerWidth;
+      position.y = Math.random() * (window.innerHeight / 6);
+    }
+  }
+
+  draw(ctx) {
+    if (this.image.complete) {
+      ctx.drawImage(
+        this.image,
+        this.position.x,
+        this.position.y,
+        this.image.width,
+        this.image.height
+      );
+    }
+  }
+
+  update() {
+    this.position.update();
+  }
+}
+
+const clouds = [
+  new CloudDrawer("static/cloud1.png", window),
+  new CloudDrawer("static/cloud2.png", window),
+];
+
 // TODO
 class Temperature {
   constructor() {
@@ -255,6 +306,11 @@ function draw() {
   ctx.fillStyle = "black";
   ctx.font = "20px Arial";
   ctx.fillText("Temperature: " + temperature.temperature + "°C", 100, 100);
+
+  clouds.forEach((cloud) => {
+    cloud.draw(ctx);
+    cloud.update();
+  });
 
   rightIceberg.draw(ctx);
   leftIceberg.draw(ctx);
